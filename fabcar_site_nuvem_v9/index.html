@@ -399,6 +399,14 @@ button.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #060b1c,0 3px 6p
 .tobd:active{opacity:.6}
 .dot.wait{background:#ffb020;box-shadow:0 0 8px #ffb020;animation:bl3 1s steps(1) infinite}
 .sheet select{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:#0b111d;color:var(--tx);padding:0 10px;font-size:14px}.sheet input[type=range]{width:100%}
+/* v10: foto do carro do usuário */
+.ph.custom .gl,.ph.custom .wglass,.ph.custom .smoke,.ph.custom .shine{display:none}
+.ph.custom img{max-height:46dvh;object-fit:cover;border-radius:16px;filter:saturate(1.05) contrast(1.03)}
+.fotobox{display:flex;gap:10px;align-items:center;margin-top:4px}
+.fotobox img{width:96px;height:60px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#000}
+.fotobox .bts{display:flex;flex-direction:column;gap:6px;flex:1}
+.fotobox button{height:36px;border-radius:10px;background:var(--card2);border:1px solid var(--line);color:var(--tx);font-size:13px}
+.fotobox small{color:var(--mut);font-size:11px}
 </style>
 </head>
 <body>
@@ -501,7 +509,7 @@ button.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #060b1c,0 3px 6p
 
 <div class="sheet" id="shV"><div><h3>Vidros</h3><div class="qv"><button data-g="d:0">Subir dianteiros</button><button data-g="d:100">Descer dianteiros</button><button data-g="t:0">Subir traseiros</button><button data-g="t:100">Descer traseiros</button><button data-g="a:0">Subir todos</button><button data-g="a:100">Descer todos</button></div><div id="wl"></div><button class="btn g2" data-close>Fechar</button></div></div>
 <div class="sheet" id="shC"><div><h3>Configurações</h3>
-  <label>Nome do carro</label><input type="text" id="cN" placeholder="Gol GTI"><label>Modo</label><div class="seg" id="sgM"><button data-m="demo">Demonstração</button><button data-m="nuvem">Carro real (MQTT)</button></div>
+  <label>Modelo / nome do carro</label><input type="text" id="cN" placeholder="Toque para escolher o modelo" list="modelos" autocomplete="off"><datalist id="modelos"><option value="Gol GTI"><option value="Gol"><option value="Voyage"><option value="Saveiro"><option value="Polo"><option value="Virtus"><option value="Fox"><option value="Up!"><option value="T-Cross"><option value="Nivus"><option value="Amarok"><option value="Onix"><option value="Onix Plus"><option value="Prisma"><option value="Celta"><option value="Corsa"><option value="Cruze"><option value="Tracker"><option value="S10"><option value="Montana"><option value="Spin"><option value="HB20"><option value="HB20S"><option value="Creta"><option value="Tucson"><option value="Uno"><option value="Palio"><option value="Mobi"><option value="Argo"><option value="Cronos"><option value="Strada"><option value="Toro"><option value="Fiorino"><option value="Pulse"><option value="Fastback"><option value="Ka"><option value="Fiesta"><option value="EcoSport"><option value="Ranger"><option value="Corolla"><option value="Corolla Cross"><option value="Etios"><option value="Yaris"><option value="Hilux"><option value="SW4"><option value="Civic"><option value="City"><option value="Fit"><option value="HR-V"><option value="Kwid"><option value="Sandero"><option value="Logan"><option value="Duster"><option value="Oroch"><option value="Kicks"><option value="Versa"><option value="Frontier"><option value="Renegade"><option value="Compass"><option value="208"><option value="2008"><option value="C3"><option value="C4 Cactus"><option value="Outro"></datalist><label>Foto do carro</label><div class="fotobox"><img id="fPrev" alt="Prévia"><div class="bts"><button type="button" id="fEsc">📷 Escolher foto do meu carro</button><button type="button" id="fPad">Usar imagem padrão</button><small>A foto fica salva só neste celular.</small></div></div><input type="file" id="fIn" accept="image/*" hidden><label>Modo</label><div class="seg" id="sgM"><button data-m="demo">Demonstração</button><button data-m="nuvem">Carro real (MQTT)</button></div>
   <label>Servidor (endereço:porta)</label><input type="text" id="cH" placeholder="broker.emqx.io:8084">
   <label>Usuário (vazio no servidor público)</label><input type="text" id="cU">
   <label>Senha (vazio no servidor público)</label><input type="password" id="cP">
@@ -889,6 +897,32 @@ function relogio(){const d=new Date();$('clk').textContent=d.toLocaleTimeString(
 relogio();setInterval(relogio,15000);
 (function(){const ph=$('ph'),img=ph.querySelector('img');ph.style.setProperty('--car','url("'+img.src+'")')})();
 
+/* v10: foto do carro do usuário */
+(function(){
+  const ph=$('ph'),img=ph.querySelector('img'),PAD=img.src;
+  function aplicar(src){
+    const custom=!!src;img.src=src||PAD;ph.classList.toggle('custom',custom);
+    ph.style.setProperty('--car','url("'+img.src+'")');$('fPrev').src=img.src;
+  }
+  let salva=null;try{salva=localStorage.getItem('fabcarFoto')}catch(e){}
+  aplicar(salva);
+  $('fEsc').onclick=()=>$('fIn').click();
+  $('fPad').onclick=()=>{try{localStorage.removeItem('fabcarFoto')}catch(e){}aplicar(null);msg('<b>Imagem padrão restaurada</b>')};
+  $('fIn').onchange=e=>{
+    const f=e.target.files&&e.target.files[0];if(!f)return;
+    const rd=new FileReader();
+    rd.onload=()=>{const im=new Image();im.onload=()=>{
+      const MAX=1280,k=Math.min(1,MAX/Math.max(im.width,im.height));
+      const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+      cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+      let q=.85,d=cv.toDataURL('image/jpeg',q);
+      while(d.length>1500000&&q>.4){q-=.1;d=cv.toDataURL('image/jpeg',q)}
+      try{localStorage.setItem('fabcarFoto',d)}catch(err){msg('<b>Foto grande demais para salvar</b>, ela vale só até fechar o app')}
+      aplicar(d);msg('<b>Foto do carro atualizada</b>');
+    };im.src=rd.result};
+    rd.readAsDataURL(f);e.target.value='';
+  };
+})();
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.FABCAR={ST,SIM,ALVO,interpretar,norm,processarTexto,confirmar,render,tick,enviar};
 let ult=performance.now();
