@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<script>try{if(localStorage.getItem("fabcar_lock")==="1"&&localStorage.getItem("fabcar_pin_h"))document.documentElement.classList.add("locked")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#04060c">
@@ -481,6 +482,21 @@ button.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #060b1c,0 3px 6p
 .lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
 .lv div{padding:8px;border-radius:10px;background:#101827;border:1px solid var(--line);font-size:11px;color:var(--mut)}.lv b{display:block;font-size:16px;color:var(--tx)}
 #sl.na{opacity:.4;filter:grayscale(1)}
+
+/* ===== v16 senha do app ===== */
+html.locked body>*:not(#lk){visibility:hidden!important}
+#lk{position:fixed;inset:0;z-index:200;display:none;place-items:center;background:radial-gradient(circle at 50% 30%,#12305a,#0A1A33 60%,#050b16);color:#fff;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+#lk.s{display:grid}
+.lkb{width:100%;max-width:330px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.lkb.shk{animation:lksh .35s}@keyframes lksh{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.lkm svg{width:64px;height:64px}.lkb b{margin-top:12px;font-size:19px}.lkb small{margin-top:4px;color:#9fb3d1;font-size:13px;min-height:18px}
+.lkd{display:flex;gap:12px;margin:16px 0 18px}.lkd i{width:14px;height:14px;border-radius:50%;border:2px solid #19c6ff}.lkd i.f{background:#19c6ff}
+.lkp{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%}
+.lkp button{height:60px;border-radius:18px;background:#ffffff12;border:1px solid #ffffff22;color:#fff;font-size:24px;font-weight:600}
+.lkp button:active{background:#19c6ff44}.lkp button.ok{background:#19c6ff;color:#0A1A33;font-size:18px;font-weight:800}
+.lkf{margin-top:16px;color:#9fb3d1;font-size:13px;background:none;text-decoration:underline}
+@media (orientation:landscape) and (max-height:520px){.lkb{max-width:520px;display:grid;grid-template-columns:1fr 1.2fr;column-gap:24px;align-items:center}.lkb>*:not(.lkp){grid-column:1}.lkp{grid-column:2;grid-row:1/7}.lkp button{height:46px}}
+.lksw{display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:#0b111d;border:1px solid var(--line);font-size:14px}
 </style>
 </head>
 <body>
@@ -1355,6 +1371,77 @@ const r0=render;render=function(){r0();pintaVid();if($('shS').classList.contains
 $('bseg').addEventListener('click',()=>{pintaDtc();pintaLive()});
 marcaTiles();pintaVid();pintaDtc();
 window.fabV15={pintaVid,RL,descr};
+})();
+
+</script>
+<script>
+/* ===== v16: senha opcional para abrir o app ===== */
+(function(){
+const $=id=>document.getElementById(id);
+const PK='fabcar_pin_h',LK='fabcar_lock',LT='fabcar_lock_t';
+async function h(t){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('fabcar|'+t));return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const ls={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},d:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+
+/* tela de bloqueio */
+const lk=document.createElement('div');lk.id='lk';
+lk.innerHTML='<div class="lkb"><div class="lkm"></div><b id="lkT">Digite seu PIN</b><small id="qkS">FAB Car protegido</small><div class="lkd" id="lkD"></div><div class="lkp" id="lkP"></div><button class="lkf" id="lkF" type="button">Esqueci o PIN</button><button class="lkf" id="lkX" type="button" style="display:none">Cancelar</button></div>';
+document.body.appendChild(lk);
+const mk=document.querySelector('#splash svg')||document.querySelector('.logo .lgm');
+if(mk)lk.querySelector('.lkm').appendChild(mk.cloneNode(true));
+$('lkP').innerHTML=['1','2','3','4','5','6','7','8','9','⌫','0','OK'].map(k=>'<button type="button" data-k="'+k+'"'+(k==='OK'?' class="ok"':'')+'>'+k+'</button>').join('');
+let dig='',modo='abrir',novo1='',erros=0,ate=0,cb=null;
+function dots(){const n=Math.max(4,dig.length);$('lkD').innerHTML=Array.from({length:n},(_,i)=>'<i'+(i<dig.length?' class="f"':'')+'></i>').join('')}
+function abrir(m,fn){modo=m;cb=fn||null;dig='';novo1='';dots();
+  $('lkT').textContent=m==='abrir'?'Digite seu PIN':m==='criar'?'Crie um PIN (4 a 6 números)':'Digite o PIN atual';
+  $('qkS').textContent=m==='abrir'?'FAB Car protegido':'Ele vai ser pedido para abrir o app';
+  $('lkF').style.display=m==='abrir'?'':'none';$('lkX').style.display=m==='abrir'?'none':'';
+  document.documentElement.classList.add('locked');lk.classList.add('s')}
+function fechar(){lk.classList.remove('s');document.documentElement.classList.remove('locked');dig=''}
+function aviso(t){$('qkS').textContent=t;lk.querySelector('.lkb').classList.remove('shk');void lk.offsetWidth;lk.querySelector('.lkb').classList.add('shk');try{navigator.vibrate&&navigator.vibrate([50,40,50])}catch(e){}}
+async function ok(){
+  if(Date.now()<ate){aviso('Aguarde '+Math.ceil((ate-Date.now())/1000)+' s');return}
+  if(modo==='criar'){
+    if(!/^\d{4,6}$/.test(dig)){aviso('Use de 4 a 6 números');return}
+    if(!novo1){novo1=dig;dig='';dots();$('lkT').textContent='Repita o PIN';return}
+    if(dig!==novo1){novo1='';dig='';dots();$('lkT').textContent='Crie um PIN (4 a 6 números)';aviso('Os PINs não batem. Tente de novo.');return}
+    ls.s(PK,await h(dig));fechar();cb&&cb(true);return}
+  if(await h(dig)===ls.g(PK)){erros=0;fechar();cb&&cb(true);return}
+  erros++;dig='';dots();
+  if(erros%5===0){ate=Date.now()+30e3*(erros/5);aviso('PIN errado. Aguarde '+(30*(erros/5))+' s')}else aviso('PIN incorreto ('+erros+')')}
+$('lkP').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
+  if(k==='OK')return ok();if(k==='⌫'){dig=dig.slice(0,-1);dots();return}
+  if(dig.length<6){dig+=k;dots();try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}}};
+document.addEventListener('keydown',e=>{if(!lk.classList.contains('s'))return;if(/^\d$/.test(e.key)&&dig.length<6){dig+=e.key;dots()}else if(e.key==='Backspace'){dig=dig.slice(0,-1);dots()}else if(e.key==='Enter')ok()});
+$('lkX').onclick=()=>{fechar();cb&&cb(false)};
+$('lkF').onclick=()=>{
+  if($('lkF').dataset.c!=='1'){$('lkF').dataset.c='1';$('lkF').textContent='Toque de novo: apaga o PIN e as configurações deste aparelho';setTimeout(()=>{$('lkF').dataset.c='';$('lkF').textContent='Esqueci o PIN'},5000);return}
+  try{Object.keys(localStorage).filter(k=>/fabcar|cfg/i.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}
+  location.reload()};
+
+/* configuração */
+const box=document.createElement('div');box.className='lkcfg';
+box.innerHTML='<h3 style="margin-top:18px">Senha do app</h3><p class="nota" style="margin-top:0">Opcional. Se ligar, ninguém abre o FAB Car neste aparelho sem o PIN.</p>'+
+ '<label class="lksw"><input type="checkbox" id="lkOn"> Pedir PIN para abrir o app</label>'+
+ '<label>Bloquear de novo quando sair do app</label><select id="lkTm"><option value="0">Na hora</option><option value="60">Depois de 1 minuto</option><option value="300">Depois de 5 minutos</option><option value="900">Depois de 15 minutos</option></select>'+
+ '<button class="btn g2" id="lkTr" type="button">Trocar PIN</button>';
+const rl=$('rlg');const h3=rl&&rl.previousElementSibling&&rl.previousElementSibling.previousElementSibling;
+(h3&&h3.tagName==='H3'?h3:$('cS')).before(box);
+const on=()=>ls.g(LK)==='1'&&!!ls.g(PK);
+function sinc(){$('lkOn').checked=on();$('lkTm').value=ls.g(LT)||'60';$('lkTr').style.display=ls.g(PK)?'':'none';$('lkTm').disabled=!on()}
+$('lkOn').onchange=()=>{
+  if($('lkOn').checked){const liga=()=>{ls.s(LK,'1');sinc();msg('<b>Senha do app ativada</b>')};
+    if(ls.g(PK))abrir('conferir',r=>r?liga():sinc());else abrir('criar',r=>r?liga():sinc())}
+  else abrir('conferir',r=>{if(r){ls.s(LK,'0');msg('<b>Senha do app desligada</b>')}sinc()})};
+$('lkTm').onchange=()=>ls.s(LT,$('lkTm').value);
+$('lkTr').onclick=()=>abrir('conferir',r=>{if(r)setTimeout(()=>abrir('criar',x=>{if(x)msg('<b>PIN trocado</b>');sinc()}),150)});
+sinc();
+
+/* bloqueia ao abrir e ao voltar para o app */
+if(on())abrir('abrir');else document.documentElement.classList.remove('locked');
+let saiu=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){saiu=Date.now();return}
+  if(on()&&!lk.classList.contains('s')&&Date.now()-saiu>=(+(ls.g(LT)||60))*1000)abrir('abrir')});
 })();
 
 </script>
