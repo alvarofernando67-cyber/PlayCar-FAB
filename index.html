@@ -1425,7 +1425,7 @@ box.innerHTML='<h3 style="margin-top:18px">Senha do app</h3><p class="nota" styl
  '<label>Bloquear de novo quando sair do app</label><select id="lkTm"><option value="0">Na hora</option><option value="60">Depois de 1 minuto</option><option value="300">Depois de 5 minutos</option><option value="900">Depois de 15 minutos</option></select>'+
  '<button class="btn g2" id="lkTr" type="button">Trocar PIN</button>';
 const rl=$('rlg');const h3=rl&&rl.previousElementSibling&&rl.previousElementSibling.previousElementSibling;
-(h3&&h3.tagName==='H3'?h3:$('cS')).before(box);
+document.querySelector('#shC h3').after(box);box.querySelector('h3').style.marginTop='6px';
 const on=()=>ls.g(LK)==='1'&&!!ls.g(PK);
 function sinc(){$('lkOn').checked=on();$('lkTm').value=ls.g(LT)||'60';$('lkTr').style.display=ls.g(PK)?'':'none';$('lkTm').disabled=!on()}
 $('lkOn').onchange=()=>{
